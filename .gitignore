@@ -1,0 +1,6 @@
+.env
+__pycache__/
+reports/
+*.pyc
+test_api.py
+report_generator.py

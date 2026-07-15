@@ -1,0 +1,41 @@
+INC0049182 - payment gateway timeouts - P1
+
+client: NorthBridge Retail (BU: E-Commerce)
+
+first alert 14:02 - monitoring flagged elevated 5xx on checkout svc
+service desk started getting tickets ~14:05, customers can't complete payment
+
+opened bridge call 14:11
+me = IM (N. Grabowska)
+
+14:14 app support joined (Marek K.)
+- confirmed checkout service returning 504 on ~60% of requests
+- said not a full outage, degraded
+
+14:20 network team joined (Priya S.)
+- checked firewall + load balancer, nothing obviously wrong on their side
+- ruled out network at 14:31
+
+14:26 payments vendor engaged (external - Stripe-like provider, ref TKT-88231)
+vendor initially said all green on their status page
+
+14:35 db team joined (Tomasz W.)
+- found connection pool exhausted on payments DB
+- max_connections hit, lots of idle-in-transaction sessions
+
+14:48 db team killed hung sessions, restarted connection pooler
+14:52 error rate started dropping
+15:04 checkout service back to normal error levels (<0.1%)
+15:10 confirmed with client, they see transactions going through
+call closed 15:15
+
+approx 1100 failed checkout attempts during the window (from app logs)
+SLA - P1 target is 4h resolution, we were inside it
+
+no root cause confirmed yet - WHY did the connections pile up? db team suspects a
+recent deploy (release 4.2.1 went out 13:40) but not proven. needs investigation.
+
+things that bugged me:
+- no alert fired on connection pool saturation, only downstream 5xx. we found it late.
+- vendor status page said green when it wasn't relevant anyway, wasted ~10 min there
+- took us 33 min from first alert to getting db team on the call. too slow.

@@ -1,0 +1,11 @@
+SSO down. users can't log in.
+
+started sometime this morning, maybe 09:something? first ticket 09:22
+bridge opened 09:30
+identity team on the call 09:41
+
+they said cert expired on the IdP. renewed it.
+back up around 10:15 i think
+
+no idea how many users affected. a lot. whole company + external partners
+nobody noticed the cert was expiring, there was no monitoring on it
