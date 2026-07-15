@@ -24,14 +24,28 @@ MAX_ATTEMPTS = 4
 
 
 def get_client():
-    """Return a configured client, or raise with a useful message."""
+    """Return a configured client, or raise with a useful message.
+
+    Looks for the key in two places, so the same code works locally and when
+    deployed:
+      1. Streamlit Cloud secrets (how the hosted app gets it)
+      2. a local .env file / environment variable (how it runs on your machine)
+    """
     load_dotenv()
     api_key = os.getenv("GOOGLE_API_KEY")
 
+    # If not found in the environment, try Streamlit secrets (present when hosted).
+    if not api_key:
+        try:
+            import streamlit as st
+            api_key = st.secrets.get("GOOGLE_API_KEY")
+        except Exception:
+            api_key = None
+
     if not api_key:
         raise RuntimeError(
-            "GOOGLE_API_KEY not found. Create a .env file containing:\n"
-            "    GOOGLE_API_KEY=your_key_here"
+            "GOOGLE_API_KEY not found. Set it in a local .env file, or in "
+            "Streamlit Cloud under Settings → Secrets."
         )
 
     return genai.Client(api_key=api_key)
